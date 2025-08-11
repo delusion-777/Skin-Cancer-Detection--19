@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skin Cancer Detection - AI Medical Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+         Header 
+        <header class="header">
+            <h1 class="title">🔬 Skin Cancer Detection</h1>
+            <p class="subtitle">AI-Powered Medical Analysis System</p>
+        </header>
+
+         Step 1: Patient Information 
+        <div id="step1" class="step active">
+            <div class="card">
+                <h2 class="step-title">Patient Information</h2>
+                <div class="form-group">
+                    <label for="patientName">Full Name</label>
+                    <input type="text" id="patientName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="patientAge">Age</label>
+                    <input type="number" id="patientAge" placeholder="Enter your age" min="1" max="120" required>
+                </div>
+                <button class="btn btn-primary" onclick="goToStep2()">Continue to Upload</button>
+            </div>
+        </div>
+
+         Step 2: Image Upload 
+        <div id="step2" class="step">
+            <div class="card">
+                <div class="patient-info">
+                    <h3>Patient: <span id="displayName"></span>, <span id="displayAge"></span> years old</h3>
+                </div>
+                
+                <h2 class="step-title">Upload Skin Image</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <div class="upload-icon">📷</div>
+                        <p>Click to select image or drag and drop</p>
+                        <p class="upload-hint">Supported: JPG, PNG, JPEG (Max 10MB)</p>
+                    </div>
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                </div>
+
+                <div id="imagePreview" class="image-preview" style="display: none;">
+                    <img id="previewImg" alt="Uploaded skin image">
+                    <div class="image-actions">
+                        <button class="btn btn-primary" onclick="startPrediction()">🔍 Predict Skin Cancer</button>
+                        <button class="btn btn-secondary" onclick="uploadAgain()">📁 Upload Again</button>
+                        <button class="btn btn-danger" onclick="stopUpload()">❌ Stop Upload</button>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn btn-secondary" onclick="goToStep1()">← Back</button>
+                </div>
+            </div>
+        </div>
+
+         Step 3: AI Analysis 
+        <div id="step3" class="step">
+            <div class="card">
+                <div class="patient-info">
+                    <h3>Patient: <span id="displayName2"></span>, <span id="displayAge2"></span> years old</h3>
+                </div>
+                
+                <h2 class="step-title">AI Analysis in Progress</h2>
+                
+                <div class="analysis-container">
+                    <div class="loading-spinner"></div>
+                    <p class="analysis-text">Analyzing skin image with AI...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">0%</p>
+                </div>
+
+                <button class="btn btn-danger" onclick="stopAnalysis()">⏹️ Stop Analysis</button>
+            </div>
+        </div>
+
+         Step 4: Results 
+        <div id="step4" class="step">
+            <div class="card">
+                <div class="patient-info">
+                    <h3>Patient: <span id="displayName3"></span>, <span id="displayAge3"></span> years old</h3>
+                </div>
+                
+                <h2 class="step-title">Analysis Results</h2>
+                
+                <div class="results-container">
+                    <div class="result-header">
+                        <h3 id="diagnosisTitle"></h3>
+                        <div class="confidence-badge" id="confidenceBadge"></div>
+                        <div class="urgency-badge" id="urgencyBadge"></div>
+                    </div>
+                    
+                    <div class="result-content">
+                        <div class="result-section">
+                            <h4>📋 Description</h4>
+                            <p id="description"></p>
+                        </div>
+                        
+                        <div class="result-section">
+                            <h4>🔍 Symptoms</h4>
+                            <p id="symptoms"></p>
+                        </div>
+                        
+                        <div class="result-section">
+                            <h4>⚠️ Risk Factors</h4>
+                            <p id="riskFactors"></p>
+                        </div>
+                        
+                        <div class="result-section">
+                            <h4>💊 Treatment</h4>
+                            <p id="treatment"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn btn-primary" onclick="uploadAgain()">📁 Upload Again</button>
+                    <button class="btn btn-secondary" onclick="goToStep1()">🏠 Return Home</button>
+                </div>
+            </div>
+        </div>
+
+         Medical Disclaimer 
+        <footer class="disclaimer">
+            <p><strong>Medical Disclaimer:</strong> This AI tool is for educational purposes only and should not replace professional medical advice. Always consult with a qualified healthcare provider for proper diagnosis and treatment.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
