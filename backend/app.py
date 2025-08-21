@@ -17,24 +17,32 @@ CORS(app)  # Enable CORS for all routes
 
 # Global variables
 model = None
-class_names = ['Actinic keratoses', 'Basal cell carcinoma', 'Benign keratosis-like lesions', 
-               'Dermatofibroma', 'Melanoma', 'Melanocytic nevi', 'Squamous cell carcinoma', 'Vascular lesions']
+class_names = [
+    'actinic keratosis',
+    'basal cell carcinoma',
+    'dermatofibroma',
+    'melanoma',
+    'nevus',
+    'pigmented benign keratosis',
+    'seborrheic keratosis',
+    'squamous cell carcinoma',
+    'vascular lesion'
+]
 
 # Model configuration
-IMG_HEIGHT = 180
-IMG_WIDTH = 180
+IMG_HEIGHT = 224
+IMG_WIDTH = 224
 
 def load_model():
     """Load the trained model"""
     global model
     try:
-        model_path = 'skin_cancer_classifier_model.h5'
+        model_path = 'enhanced_skin_cancer_model.h5'
         if os.path.exists(model_path):
             model = tf.keras.models.load_model(model_path)
             logger.info("Model loaded successfully")
         else:
             logger.error(f"Model file not found: {model_path}")
-            # Create a dummy model for testing if the actual model isn't available
             model = create_dummy_model()
     except Exception as e:
         logger.error(f"Error loading model: {str(e)}")
@@ -53,24 +61,17 @@ def create_dummy_model():
 def preprocess_image(image_data):
     """Preprocess image for model prediction"""
     try:
-        # Decode base64 image
         if image_data.startswith('data:image'):
             image_data = image_data.split(',')[1]
         
         image_bytes = base64.b64decode(image_data)
         image = Image.open(io.BytesIO(image_bytes))
         
-        # Convert to RGB if necessary
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Resize image
         image = image.resize((IMG_WIDTH, IMG_HEIGHT))
-        
-        # Convert to numpy array and normalize
         image_array = np.array(image) / 255.0
-        
-        # Add batch dimension
         image_array = np.expand_dims(image_array, axis=0)
         
         return image_array
@@ -79,83 +80,87 @@ def preprocess_image(image_data):
         raise
 
 def get_detailed_info(predicted_class, confidence):
-    """Get detailed information about the predicted skin condition"""
-    
+    """Return detailed info for predicted condition"""
     skin_info = {
-        'Melanoma': {
-            'description': 'Melanoma is the most serious type of skin cancer. It develops in melanocytes, the cells that produce melanin.',
-            'symptoms': 'Asymmetrical moles, irregular borders, color variations, diameter larger than 6mm, evolving characteristics',
-            'risk_factors': 'UV exposure, fair skin, family history, multiple moles, weakened immune system',
-            'treatment': 'Surgical excision, immunotherapy, targeted therapy, chemotherapy in advanced cases',
-            'urgency': 'HIGH - Immediate medical attention required'
+        'actinic keratosis': {
+            'description': 'Precancerous rough, scaly patches caused by sun exposure.',
+            'symptoms': 'Dry, scaly, rough patches; pink/red/brown; sandpaper-like texture.',
+            'risk_factors': 'Fair skin, sun exposure, age >40, weak immunity.',
+            'treatment': 'Cryotherapy, topical creams, laser, PDT, excision.',
+            'urgency': 'LOW to MODERATE'
         },
-        'Basal cell carcinoma': {
-            'description': 'The most common form of skin cancer, arising from basal cells in the epidermis.',
-            'symptoms': 'Pearly or waxy bumps, flat flesh-colored lesions, bleeding or scabbing sores',
-            'risk_factors': 'Chronic sun exposure, fair skin, age over 50, male gender',
-            'treatment': 'Surgical excision, Mohs surgery, radiation therapy, topical medications',
-            'urgency': 'MODERATE - Schedule appointment within 2-4 weeks'
+        'basal cell carcinoma': {
+            'description': 'Most common skin cancer, slow-growing, rarely spreads.',
+            'symptoms': 'Pearly bump, scar-like lesion, bleeding sores.',
+            'risk_factors': 'UV exposure, age >50, fair skin, radiation exposure.',
+            'treatment': 'Mohs surgery, excision, cryotherapy, topical therapy.',
+            'urgency': 'MODERATE'
         },
-        'Squamous cell carcinoma': {
-            'description': 'Second most common skin cancer, developing in squamous cells of the epidermis.',
-            'symptoms': 'Red, scaly patches, open sores, elevated growths with central depression',
-            'risk_factors': 'UV exposure, fair skin, immunosuppression, chronic wounds',
-            'treatment': 'Surgical excision, Mohs surgery, radiation therapy, cryotherapy',
-            'urgency': 'MODERATE - Schedule appointment within 2-4 weeks'
+        'dermatofibroma': {
+            'description': 'Benign fibrous skin growth, usually harmless.',
+            'symptoms': 'Firm nodules, brown/red, dimples inward when pinched.',
+            'risk_factors': 'Minor skin trauma, more common in women.',
+            'treatment': 'No treatment unless bothersome.',
+            'urgency': 'LOW'
         },
-        'Actinic keratoses': {
-            'description': 'Precancerous skin lesions caused by sun damage that may develop into squamous cell carcinoma.',
-            'symptoms': 'Rough, scaly patches, pink or red coloration, sandpaper-like texture',
-            'risk_factors': 'Chronic sun exposure, fair skin, age over 40, outdoor occupation',
-            'treatment': 'Cryotherapy, topical medications, photodynamic therapy, chemical peels',
-            'urgency': 'LOW - Monitor and schedule routine dermatology visit'
+        'melanoma': {
+            'description': 'Most dangerous skin cancer, spreads rapidly if untreated.',
+            'symptoms': 'Irregular moles (ABCDE rule).',
+            'risk_factors': 'UV exposure, family history, fair skin, many moles.',
+            'treatment': 'Surgery, immunotherapy, targeted therapy.',
+            'urgency': 'HIGH'
         },
-        'Benign keratosis-like lesions': {
-            'description': 'Non-cancerous skin growths that are generally harmless but may resemble other conditions.',
-            'symptoms': 'Waxy, scaly, or slightly raised patches, brown or black coloration',
-            'risk_factors': 'Age, genetics, sun exposure',
-            'treatment': 'Usually no treatment needed, removal for cosmetic reasons if desired',
-            'urgency': 'LOW - Routine monitoring recommended'
+        'nevus': {
+            'description': 'Common benign mole made of melanocytes.',
+            'symptoms': 'Small, uniform, stable brown/black spots.',
+            'risk_factors': 'Genetics, sun exposure, hormonal changes.',
+            'treatment': 'Monitoring, excision if suspicious.',
+            'urgency': 'LOW'
         },
-        'Melanocytic nevi': {
-            'description': 'Common benign moles composed of melanocytes. Most are harmless.',
-            'symptoms': 'Brown or black spots, uniform color and shape, stable over time',
-            'risk_factors': 'Genetics, sun exposure, fair skin',
-            'treatment': 'Regular monitoring, removal if changes occur',
-            'urgency': 'LOW - Regular self-examination and annual check-ups'
+        'pigmented benign keratosis': {
+            'description': 'Harmless dark scaly growth, often mistaken for melanoma.',
+            'symptoms': 'Brown/black, wart-like patches.',
+            'risk_factors': 'Aging, sun exposure, genetics.',
+            'treatment': 'None unless cosmetic.',
+            'urgency': 'LOW'
         },
-        'Dermatofibroma': {
-            'description': 'Benign fibrous skin tumor, often resulting from minor injuries like insect bites.',
-            'symptoms': 'Small, firm nodules, brown or red coloration, dimpling when pinched',
-            'risk_factors': 'Minor skin trauma, more common in women',
-            'treatment': 'Usually no treatment needed, surgical removal if bothersome',
-            'urgency': 'LOW - No immediate concern'
+        'seborrheic keratosis': {
+            'description': 'Common benign skin growth in older adults.',
+            'symptoms': 'Waxy, scaly, raised, stuck-on appearance.',
+            'risk_factors': 'Age, genetics, fair skin.',
+            'treatment': 'None unless cosmetic.',
+            'urgency': 'LOW'
         },
-        'Vascular lesions': {
-            'description': 'Benign growths involving blood vessels in the skin.',
-            'symptoms': 'Red or purple spots, may blanch with pressure, various sizes',
-            'risk_factors': 'Age, genetics, sun exposure',
-            'treatment': 'Laser therapy, sclerotherapy, surgical removal if needed',
-            'urgency': 'LOW - Cosmetic concern, routine evaluation'
+        'squamous cell carcinoma': {
+            'description': 'Second most common skin cancer, can spread.',
+            'symptoms': 'Red, scaly patches, sores, wart-like growths.',
+            'risk_factors': 'UV exposure, smoking, HPV, weak immunity.',
+            'treatment': 'Excision, Mohs surgery, radiation.',
+            'urgency': 'MODERATE to HIGH'
+        },
+        'vascular lesion': {
+            'description': 'Benign condition involving blood vessels.',
+            'symptoms': 'Red/purple/blue spots, blanch on pressure.',
+            'risk_factors': 'Genetics, age, sun exposure.',
+            'treatment': 'Usually none, laser possible.',
+            'urgency': 'LOW'
         }
     }
     
     return skin_info.get(predicted_class, {
         'description': 'Skin condition detected',
-        'symptoms': 'Various symptoms may be present',
-        'risk_factors': 'Multiple factors may contribute',
-        'treatment': 'Consult with dermatologist for proper evaluation',
-        'urgency': 'MODERATE - Professional evaluation recommended'
+        'symptoms': 'Symptoms vary',
+        'risk_factors': 'Multiple factors',
+        'treatment': 'Consult dermatologist',
+        'urgency': 'MODERATE'
     })
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
     return jsonify({'status': 'healthy', 'model_loaded': model is not None})
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    """Predict skin cancer from uploaded image"""
     try:
         if not model:
             return jsonify({'error': 'Model not loaded'}), 500
@@ -164,31 +169,22 @@ def predict():
         if not data or 'image' not in data:
             return jsonify({'error': 'No image data provided'}), 400
         
-        # Preprocess image
         image_array = preprocess_image(data['image'])
-        
-        # Make prediction
         predictions = model.predict(image_array)
         predicted_class_index = np.argmax(predictions[0])
         confidence = float(predictions[0][predicted_class_index]) * 100
         predicted_class = class_names[predicted_class_index]
         
-        # Get detailed information
         detailed_info = get_detailed_info(predicted_class, confidence)
         
-        # Prepare response
         response = {
-            'diagnosis': predicted_class,
+            'diagnosis': predicted_class.title(),
             'confidence': round(confidence, 2),
-            'description': detailed_info['description'],
-            'symptoms': detailed_info['symptoms'],
-            'risk_factors': detailed_info['risk_factors'],
-            'treatment': detailed_info['treatment'],
-            'urgency': detailed_info['urgency'],
-            'recommendation': f"Based on the analysis, this appears to be {predicted_class} with {confidence:.1f}% confidence. {detailed_info['urgency']}"
+            **detailed_info,
+            'recommendation': f"This appears to be {predicted_class.title()} with {confidence:.1f}% confidence. Urgency: {detailed_info['urgency']}."
         }
         
-        logger.info(f"Prediction made: {predicted_class} ({confidence:.2f}%)")
+        logger.info(f"Prediction: {predicted_class} ({confidence:.2f}%)")
         return jsonify(response)
         
     except Exception as e:
@@ -197,7 +193,6 @@ def predict():
 
 @app.route('/classes', methods=['GET'])
 def get_classes():
-    """Get available class names"""
     return jsonify({'classes': class_names})
 
 if __name__ == '__main__':
